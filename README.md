@@ -9,3 +9,6 @@ Extension: If this is successful, maybe we can have a method to precheck if the 
 # How to Use
 - Create a virtual environment ` python -m venv .env`
 - Activate environment on windows `.myenv\Scripts\activate`
+# Update your Packages
+- `pip freeze > requirements.txt`
+- `pip install -r ./requirements.txt`
