@@ -21,3 +21,6 @@
 ## Technologies Used
 - Python
 - PyTorch (with TorchVision or Detectron2)
+
+## Useful Resources
+- PyTorch Vision GitHub [Link](https://github.com/pytorch/vision)
