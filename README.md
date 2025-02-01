@@ -25,3 +25,4 @@ You need to make sure to download and follow all steps correctly, because the ve
 
 ## Useful Resources
 - Detectron2 GitHub [Link](https://github.com/facebookresearch/Detectron2)
+- Detectron2 Training Data for Models [Link](https://github.com/facebookresearch/detectron2/blob/main/MODEL_ZOO.md)
