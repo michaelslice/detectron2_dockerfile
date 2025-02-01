@@ -6,21 +6,22 @@
 - Method: There may exist software (or by combining multiple tools) that can detect the content of (simple) videos, and summarize it in a classifiable way. Just like image classification, there might be a method to tell if a video is about a child (or a person) walking back and forth, or about a dog running in a park, or about a wildfire, or simply “not a child walking”. 
 - Extension: If this is successful, maybe we can have a method to precheck if the user-submitted videos are compliant with expectation. For example, if the video only captures the right half of the child’ s body, then we stop the analysis and issue a message asking for resubmission. 
 
-# Prerequisites(Windows)
-- Download CUDA 12.8 [Download CUDA](https://developer.nvidia.com/cuda-downloads)
-- Download pyTorch with CUDA support , to ensure GPU use <br> `pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121`
+## Prerequisites(Windows)
+You need to make sure to download and follow all steps correctly, because the version Python packages Detectron2 uses, are only compatible with certain versions of CUDA. And Visual Studio 2017's MSVC Compiler is what is used to compile the CUDA C++ code.
+- Download Python 3.8 [Link](https://www.python.org/downloads/release/python-380/)
+- Download CUDA 11.3 [Link](https://developer.nvidia.com/cuda-11.3.0-download-archive?target_os=Windows&target_arch=x86_64&target_version=10&target_type=exe_local)
+- Download Visual Studio 2017 [Link](https://quasar.ugent.be/files/doc/cuda-msvc-compatibility.html) 
+## Download Repo and Requirements
+- Download Repo: `git clone https://github.com/michaelslice/igait-video-precheck.git`
+- Navigate to directory: `cd igait-video-precheck/Examples/Detectron2_test`
+- Create a Virtual Environment for Python 3.8, your directory may be different: `C:\Users\User\AppData\Local\Programs\Python\Python38\python.exe -m venv .env`
+- Activate Environment: `.myenv\Scripts\activate`
+- Download Requirements: `pip install -r requirements.txt`
 
+## Run Models
+- To run Detection model: `./main.py`
 
-# How to Use
-- git clone `https://github.com/michaelslice/igait-video-precheck.git`
-- Create a virtual environment ` python -m venv .env`
-- Activate environment on windows `.myenv\Scripts\activate`
-# Update your Packages
-- `pip freeze > requirements.txt`
-- `pip install -r ./requirements.txt`
-## Technologies Used
-- Python
-- PyTorch (with TorchVision or Detectron2)
+## Prerequisites(Linux) TODO
 
 ## Useful Resources
-- PyTorch Vision GitHub [Link](https://github.com/pytorch/vision)
+- Detectron2 GitHub [Link](https://github.com/facebookresearch/Detectron2)
