@@ -5,6 +5,7 @@ from detectron2.utils.visualizer import ColorMode, Visualizer
 from detectron2 import model_zoo
 import cv2
 import numpy as np
+import os
 
 class Detector:
     def __init__(self, model_type = "OD"):
@@ -122,58 +123,69 @@ class Detector:
         '''
         validateUser: Validate if a user sent a video of a person walking 
         
-        imagePath: The absolute path to the file you would like to use
+        videoPath: The absolute path to the video file
         '''
+        # Create output directory if it doesn't exist
+        output_dir = '/iGAIT-VIDEO-PRECHECK/output'
+        os.makedirs(output_dir, exist_ok=True)
         
         cap = cv2.VideoCapture(videoPath)
         if(cap.isOpened() == False):
-            print("Error, opening file")
-            return
-        
-        (success, image) = cap.read()
+            print(f"Error opening file: {videoPath}")
+            print(f"Current working directory: {os.getcwd()}")
+            print(f"Files in directory: {os.listdir('.')}")
+            return False
 
-        while success:      
-            if self.model_type != "PS":
-                predictions = self.predictor(image)
-                viz = Visualizer(image[:,:,::-1], metadata= MetadataCatalog.get(self.cfg.DATASETS.TRAIN[0]),
-                instance_mode= ColorMode.SEGMENTATION)                    
-                output = viz.draw_instance_predictions(predictions["instances"].to("cpu"))
-            else:
-                predictions, segmentInfo = self.predictor(image)["panoptic_seg"]
+        frame_count = 0
+        person_detected = False
+        
+        print(f"Processing video: {videoPath}")
+        
+        while True:
+            success, image = cap.read()
+            if not success:
+                break
+                
+            frame_count += 1
+            print(f"Processing frame {frame_count}")
+            
+            if self.model_type == "PS":
                 outputs = self.predictor(image)
-                                
-                # instances:              Detected objects in the frame
-                # detected_class_indexes: Class indices of the detected objects
-                # prediction_boxes:       Bounding box coordinates of the detected objects
+                predictions, segmentInfo = outputs["panoptic_seg"]
                 instances = outputs["instances"]
                 detected_class_indexes = instances.pred_classes
                 prediction_boxes = instances.pred_boxes
                 
-                # Retrieve the class names from metadata dataset
                 metadata = MetadataCatalog.get(self.cfg.DATASETS.TRAIN[0])
                 class_catalog = metadata.thing_classes
                 
-                # Loop through the detected objects and check if a 
-                # person is detected, if so break out of loop
+                # Check for person detection
                 for idx, coordinates in enumerate(prediction_boxes):
                     class_index = detected_class_indexes[idx]
                     class_name = class_catalog[class_index]
                     
-                    # If we detect a person the video is valid
                     if "person" in class_catalog[class_index]:
-                        print("PERSON DETECTED")
-                        # We can do return if a user is detected
-                        # Alternatively, if we want to process the whole vid, break would work here
-                        return True
-                    print(class_name, coordinates)
-                
-                viz = Visualizer(image[:,:,::-1], MetadataCatalog.get(self.cfg.DATASETS.TRAIN[0]))
-                output = viz.draw_panoptic_seg_predictions(predictions.to("cpu"), segmentInfo)
-            
-            # cv2.imshow("Result", output.get_image()[:,:,::-1])
-            
-            key = cv2.waitKey(1) & 0xFF
-            if key == ord("q"):
-                break
+                        print(f"PERSON DETECTED in frame {frame_count}")
+                        person_detected = True
+                        
+                        # Save the frame with detection
+                        viz = Visualizer(image[:,:,::-1], MetadataCatalog.get(self.cfg.DATASETS.TRAIN[0]))
+                        output = viz.draw_panoptic_seg_predictions(predictions.to("cpu"), segmentInfo)
+                        output_image = output.get_image()[:,:,::-1]
+                        output_path = os.path.join(output_dir, f'detection_frame_{frame_count}.jpg')
+                        cv2.imwrite(output_path, output_image)
+                        print(f"Saved detection frame to: {output_path}")
+                        
+                        # Break to process whole vid
+                        break
+                        # Return if we want to stop processing once person detected
+                        # Return
 
-            (success, image) = cap.read()
+        cap.release()
+        
+        if person_detected:
+            print("Validation successful: Person detected in video")
+            return True
+        else:
+            print("Validation failed: No person detected in video")
+            return False
