@@ -8,10 +8,30 @@ import cv2
 import numpy as np
 from Detector import *
 
-# For production script, probably will add file name as a command line arguement to run script
 def main():
+    print("Starting video validation...")
+    
+    # Create detector object
     detector = Detector(model_type="PS")
-    detector.validateUser("C:/Users/User/Desktop/igait-video-precheck/data/5.MOV")
+    
+    # Using the mounted container path
+    video_path = '/iGAIT-VIDEO-PRECHECK/data/5.MOV'
+    
+    # Check if file exists
+    if not os.path.exists(video_path):
+        print(f"Error: Video file not found at {video_path}")
+        print("Contents of data directory:")
+        print(os.listdir('/iGAIT-VIDEO-PRECHECK/data'))
+        return
+    
+    # Validate the video, for person detection
+    result = detector.validateUser(video_path)
+    
+    if result:
+        print("Video validation completed successfully")
+        print("Output frames have been saved to the output directory")
+    else:
+        print("Video validation failed")
 
 if __name__ == "__main__":
     main()

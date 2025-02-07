@@ -162,13 +162,15 @@ class Detector:
                     # If we detect a person the video is valid
                     if "person" in class_catalog[class_index]:
                         print("PERSON DETECTED")
-                        # return
+                        # We can do return if a user is detected
+                        # Alternatively, if we want to process the whole vid, break would work here
+                        return True
                     print(class_name, coordinates)
                 
                 viz = Visualizer(image[:,:,::-1], MetadataCatalog.get(self.cfg.DATASETS.TRAIN[0]))
                 output = viz.draw_panoptic_seg_predictions(predictions.to("cpu"), segmentInfo)
             
-            cv2.imshow("Result", output.get_image()[:,:,::-1])
+            # cv2.imshow("Result", output.get_image()[:,:,::-1])
             
             key = cv2.waitKey(1) & 0xFF
             if key == ord("q"):
