@@ -1,4 +1,4 @@
-# Detectron2 Dockerfiles
+# Detectron2 Dockerfile
 
 ## Objective  
 Precheck user-submitted videos before gait analysis to ensure they feature a child walking. If not, analysis is halted.  
@@ -10,14 +10,24 @@ We explore software to classify video content, similar to image classification, 
 - Install [Docker](https://www.docker.com/).  
 
 ## Usage  
-```sh
-# Clone the repository
-git clone https://github.com/michaelslice/igait-video-precheck.git
-cd igait-video-precheck
 
-# Build and run the Docker image
-docker build -t video_check .
-docker run --gpus all video_check
+### Pull the image 
+```
+docker pull ghcr.io/michaelslice/igait-detectron2:latest
+```
+### Run the image
+- `docker run`: Runs a new container
+- `--gpus all`: Run using gpus
+- `-v /path_to_video_file`: Maps the local folder containing video files to the container’s directory
+- `ghcr.io/michaelslice/igait-detectron2:latest`: The docker image to run
+- `"/iGAIT-VIDEO-PRECHECK/path_to_your_data/YOUR_VIDEO.MOV"`: The video file to be analyzed
+```
+docker run --gpus all -v /path_to_video_file:/iGAIT-VIDEO-PRECHECK/data ghcr.io/michaelslice/igait-detectron2:latest "/iGAIT-VIDEO-PRECHECK/data/5.MOV"
+```
+
+### Example Usage on Windows
+```
+docker run --gpus all -v C:/Users/User/Desktop/igait-video-precheck/data:/iGAIT-VIDEO-PRECHECK/data ghcr.io/michaelslice/igait-detectron2:latest "/iGAIT-VIDEO-PRECHECK/data/5.MOV"
 ```
 
 ## Resources  
