@@ -44,4 +44,5 @@ COPY . .
 RUN chmod -R 755 data
 
 # Execute the script
-CMD ["python3", "./validate_user.py"]
+ENTRYPOINT ["python3", "./validate_user.py"]
+CMD []
