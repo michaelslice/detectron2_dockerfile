@@ -18,7 +18,7 @@ docker pull ghcr.io/michaelslice/igait-detectron2:latest
 ### Run the image
 - `docker run`: Runs a new container
 - `--gpus all`: Run using gpus
-- `-v /path_to_video_file`: Maps the local folder containing video files to the container’s directory
+- `-v /path_to_video_file:/iGAIT-VIDEO-PRECHECK/data`: Maps the local folder containing video files to the container’s directory
 - `ghcr.io/michaelslice/igait-detectron2:latest`: The docker image to run
 - `"/iGAIT-VIDEO-PRECHECK/path_to_your_data/YOUR_VIDEO.MOV"`: The video file to be analyzed
 ```
