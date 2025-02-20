@@ -5,7 +5,6 @@ from detectron2.utils.visualizer import ColorMode, Visualizer
 from detectron2 import model_zoo
 import cv2
 import numpy as np
-import os
 
 class Detector:
     def __init__(self, model_type = "OD"):
@@ -46,7 +45,6 @@ class Detector:
     def onImage(self, imagePath):
         '''
         onImage: Process a image using various computer vision models
-        
         imagePath: The absolute path to the file you would like to use
         '''
         
@@ -71,121 +69,76 @@ class Detector:
             viz = Visualizer(image[:,:,::-1], MetadataCatalog.get(self.cfg.DATASETS.TRAIN[0]))
             output = viz.draw_panoptic_seg_predictions(predictions.to("cpu"), segmentInfo)
         
-        # Display the visualized predictions in a window 
-        cv2.imshow("Result", output.get_image()[:,:,::-1])
-        cv2.waitKey(0)
-    
+        output_path = imagePath.rsplit('.', 1)[0] + '_processed.' + imagePath.rsplit('.', 1)[1]
+        cv2.imwrite(output_path, output.get_image()[:,:,::-1])
+        print(f"Processed image saved to: {output_path}")
+        
+        return output_path
+            
     def onVideo(self, videoPath):
         '''
-        onVideo: Process a video using 
+        onVideo: Validate if a user sent a video of a person walking 
         
-        imagePath: The absolute path to the file you would like to use
+        videoPath: The absolute path to the file you would like to use
         '''
         
-        # Initialize a video capture object, and check if open correctly
         cap = cv2.VideoCapture(videoPath)
         if(cap.isOpened() == False):
             print("Error, opening file")
             return
         
-        # success: Boolean if frame was successfully
-        # image: Frame of image from video
-        (success, image) = cap.read()
+        # Set up video writer
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')            
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))    
         
-        # Iterate as long as frames are read from the video
+        output_path = videoPath.rsplit('.', 1)[0] + '_processed.' + videoPath.rsplit('.', 1)[1]
+        out = cv2.VideoWriter(output_path, fourcc, 20.0, (width, height))
+        
+        (success, image) = cap.read()
+
         while success:      
-            # If model not Panoptic Segmentation
             if self.model_type != "PS":
-                predictions = self.predictor(image)    
+                predictions = self.predictor(image)
                 viz = Visualizer(image[:,:,::-1], metadata= MetadataCatalog.get(self.cfg.DATASETS.TRAIN[0]),
-                instance_mode= ColorMode.IMAGE)
+                instance_mode= ColorMode.SEGMENTATION)                    
                 output = viz.draw_instance_predictions(predictions["instances"].to("cpu"))
             else:
                 predictions, segmentInfo = self.predictor(image)["panoptic_seg"]
-                
-                # Visualizes the panoptic segmentation predictions on the image.
-                viz = Visualizer(image[:,:,::-1], MetadataCatalog.get(self.cfg.DATASETS.TRAIN[0]))
-                output = viz.draw_panoptic_seg_predictions(predictions.to("cpu"), segmentInfo)
-            
-            # Display the visualized predictions in a window 
-            cv2.imshow("Result", output.get_image()[:,:,::-1])
-            
-            # If press q stop model and video processing
-            key = cv2.waitKey(1) & 0xFF
-            if key == ord("q"):
-                break
-            
-            # Read the next frame from the video
-            (success, image) = cap.read()
-            
-            
-    def validateUser(self, videoPath):
-        '''
-        validateUser: Validate if a user sent a video of a person walking 
-        
-        videoPath: The absolute path to the video file
-        '''
-        # Create output directory if it doesn't exist
-        output_dir = '/iGAIT-VIDEO-PRECHECK/output'
-        os.makedirs(output_dir, exist_ok=True)
-        
-        cap = cv2.VideoCapture(videoPath)
-        if(cap.isOpened() == False):
-            print(f"Error opening file: {videoPath}")
-            print(f"Current working directory: {os.getcwd()}")
-            print(f"Files in directory: {os.listdir('.')}")
-            return False
-
-        frame_count = 0
-        person_detected = False
-        
-        print(f"Processing video: {videoPath}")
-        
-        while True:
-            success, image = cap.read()
-            if not success:
-                break
-                
-            frame_count += 1
-            print(f"Processing frame {frame_count}")
-            
-            if self.model_type == "PS":
                 outputs = self.predictor(image)
-                predictions, segmentInfo = outputs["panoptic_seg"]
+                                
+                # instances:              Detected objects in the frame
+                # detected_class_indexes: Class indices of the detected objects
+                # prediction_boxes:       Bounding box coordinates of the detected objects
                 instances = outputs["instances"]
                 detected_class_indexes = instances.pred_classes
                 prediction_boxes = instances.pred_boxes
                 
+                # Retrieve the class names from metadata dataset
                 metadata = MetadataCatalog.get(self.cfg.DATASETS.TRAIN[0])
                 class_catalog = metadata.thing_classes
                 
-                # Check for person detection
+                # Loop through the detected objects and check if a 
+                # person is detected, if so break out of loop
                 for idx, coordinates in enumerate(prediction_boxes):
                     class_index = detected_class_indexes[idx]
                     class_name = class_catalog[class_index]
-                    
-                    if "person" in class_catalog[class_index]:
-                        print(f"PERSON DETECTED in frame {frame_count}")
-                        person_detected = True
-                        
-                        # Save the frame with detection
-                        viz = Visualizer(image[:,:,::-1], MetadataCatalog.get(self.cfg.DATASETS.TRAIN[0]))
-                        output = viz.draw_panoptic_seg_predictions(predictions.to("cpu"), segmentInfo)
-                        output_image = output.get_image()[:,:,::-1]
-                        output_path = os.path.join(output_dir, f'detection_frame_{frame_count}.jpg')
-                        cv2.imwrite(output_path, output_image)
-                        print(f"Saved detection frame to: {output_path}")
-                        
-                        # Break to process whole vid
-                        break
-                        # Return if we want to stop processing once person detected
-                        # Return
-
+                    # If we detect a person the video is valid
+                    # if "person" in class_catalog[class_index]:
+                    print(class_name, coordinates)
+                
+                viz = Visualizer(image[:,:,::-1], MetadataCatalog.get(self.cfg.DATASETS.TRAIN[0]))
+                output = viz.draw_panoptic_seg_predictions(predictions.to("cpu"), segmentInfo)
+            
+            # Write the frame
+            out.write(output.get_image()[:,:,::-1])
+            
+            # Read next frame
+            (success, image) = cap.read()
+            
+        # Clean up
         cap.release()
+        out.release()
         
-        if person_detected:
-            print("Validation successful: Person detected in video")
-            return True
-        else:
-            print("Validation failed: No person detected in video")
-            return False
+        print(f"Processed video saved to: {output_path}")
+        return output_path

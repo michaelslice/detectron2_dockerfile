@@ -11,28 +11,53 @@ from Detector import *
 
 def main():
     print("Starting video validation...")
+    valid_options = ("OD", "IS", "KP", "LVIS", "PS")
+    model = input("Which model would you like to use?, enter OD, IS, KP, LVIS, PS: ").strip().upper()
     
-    # Create detector object
-    detector = Detector(model_type="PS")
-    
-    # Process comand line arg
-    video_path = sys.argv[1]
+    # Validate input
+    if model in valid_options:
+
+        option = input("Would you like to use photo or video?, enter 1(photo), 2(video): ").strip()
         
-    # Check if file exists
-    if not os.path.exists(sys.argv[1]):
-        print(f"Error: Video file not found at {sys.argv[1]}")
-        print("Contents of data directory:")
-        print(os.listdir('/iGAIT-VIDEO-PRECHECK/data'))
-        return
-    
-    # Validate the video, for person detection
-    result = detector.validateUser(sys.argv[1])
-    
-    if result:
-        print("Video validation completed successfully")
-        print("Output frames have been saved to the output directory")
+        # Image
+        if int(option) == 1:
+            print("Processing Image")
+            detector = Detector(model_type=model)    
+            
+            # Process comand line arg
+            video_path = sys.argv[1]
+                
+            # Check if file exists
+            if not os.path.exists(sys.argv[1]):
+                print(f"Error: Video file not found at {sys.argv[1]}")
+                print("Contents of data directory:")
+                print(os.listdir('/data'))
+                return
+
+            # Run model
+            result = detector.onImage(sys.argv[1])
+
+        # Video            
+        elif int(option) == 2:
+            print("Processing Video")
+            # model_type="PS" is best option
+            detector = Detector(model_type=model)    
+            
+            # Process comand line arg
+            video_path = sys.argv[1]
+                
+            # Check if file exists
+            if not os.path.exists(sys.argv[1]):
+                print(f"Error: Video file not found at {sys.argv[1]}")
+                print("Contents of data directory:")
+                print(os.listdir('/data'))
+                return
+
+            # Run video
+            result = detector.onVideo(sys.argv[1])
+        
     else:
-        print("Video validation failed")
+        print("Error invalid option entered.")
 
 if __name__ == "__main__":
     main()
